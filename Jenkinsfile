@@ -4,7 +4,7 @@ pipeline {
     environment {
         APP_NAME = "task"
         IMAGE_NAME = "task"
-        CONTAINER_NAME = "tracker"
+        CONTAINER_NAME = "task"
         PORT = "3000"
     }
 

@@ -3,12 +3,9 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy only package files first (for caching)
 COPY package*.json ./
-
 RUN npm install
 
-# Copy source code only once
 COPY . .
 
 # Stage 2 - Production
@@ -18,12 +15,11 @@ WORKDIR /app
 
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
-# Copy only required files (not everything)
-COPY --from=builder /app/package*.json ./
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app ./
+# Copy source directly again (from local)
+COPY . .
 
-RUN npm prune --omit=dev
+# Install only production dependencies
+RUN npm install --omit=dev
 
 USER appuser
 

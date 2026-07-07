@@ -1,68 +1,76 @@
 pipeline {
     agent any
-
+ 
     environment {
-        APP_NAME = "task"
-        IMAGE_NAME = "task"
-        CONTAINER_NAME = "task"
-        PORT = "3000"
+        IMAGE_NAME = "task:t1"
+        IMAGE_TAG = "latest"
     }
-
+ 
     stages {
-
+ 
         stage('SCM Pull') {
             steps {
-                git branch: 'main', url: 'https://github.com/Tapasvigowda/newproject.git'
+                git branch: 'main',
+                    url: 'https://github.com/DeepikaCAshok/Intelli-Assignment.git'
             }
         }
-
-        stage('Install Dependencies & Test') {
+ 
+        stage('Install Dependencies and Run Tests') {
             steps {
                 sh '''
-                npm install
-                npm test || echo "No tests found, continuing..."
+                    npm install
+                    npm test
                 '''
             }
         }
-
-        stage('Build Docker Image') {
+ 
+        stage('Build') {
             steps {
                 sh '''
-                docker build -t $IMAGE_NAME .
+                    docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
                 '''
             }
         }
-
-        stage('Deploy using Docker Compose') {
+ 
+        stage('Deploy') {
             steps {
                 sh '''
-                docker compose up -d --build
+                    docker rm -f task:t1 || true
+                    docker-compose up -d
                 '''
             }
         }
-
-        stage('Verify Deployment (Curl)') {
+ 
+        stage('Wait for Application') {
             steps {
                 sh '''
-                sleep 10
-
-                echo "---- ROOT ENDPOINT ----"
-                curl http://localhost:3000/
-
-                echo "---- HEALTH ENDPOINT ----"
-                curl http://localhost:3000/health
-
-                echo "---- TASKS ENDPOINT ----"
-                curl http://localhost:3000/api/tasks
+                    echo "Waiting for application..."
+                    sleep 10
                 '''
             }
         }
-
+ 
+        stage('Curl') {
+            steps {
+                sh '''
+                    echo "========== HOME =========="
+                    curl --retry 10 --retry-delay 2 --retry-connrefused http://localhost:3000/
+ 
+                    echo ""
+                    echo "========== HEALTH =========="
+                    curl --retry 10 --retry-delay 2 --retry-connrefused http://localhost:3000/health
+ 
+                    echo ""
+                    echo "========== TASKS =========="
+                    curl --retry 10 --retry-delay 2 --retry-connrefused http://localhost:3000/api/tasks
+                '''
+            }
+        }
+ 
         stage('Cleanup') {
             steps {
                 sh '''
-                docker compose down
-                docker system prune -f
+                    docker image prune -f
                 '''
                 cleanWs()
             }

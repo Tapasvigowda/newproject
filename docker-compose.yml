@@ -1,0 +1,9 @@
+version: "3.8"
+
+services:
+  task-tracker:
+    image: task:t1
+    container_name: task
+    ports:
+      - "3000:3000"
+    restart: unless-stopped

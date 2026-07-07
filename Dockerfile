@@ -1,37 +1,27 @@
-# ---------- Stage 1: Build ----------
-FROM node:18-alpine AS builder
+# Stage 1 - Build
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy dependency files first (for caching)
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production
+RUN npm install
 
-# Copy source code
 COPY . .
 
-
-# ---------- Stage 2: Production ----------
-FROM node:18-alpine
-
-# Create non-root user (security best practice)
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+# Stage 2 - Production
+FROM node:20-alpine
 
 WORKDIR /app
 
-# Copy app from builder stage
-COPY --from=builder /app /app
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
-# Set ownership
-RUN chown -R appuser:appgroup /app
+COPY --from=builder /app .
 
-# Switch to non-root user
+RUN npm install --omit=dev
+
 USER appuser
 
-# Expose application port
 EXPOSE 3000
 
-# Start application
 CMD ["npm", "start"]

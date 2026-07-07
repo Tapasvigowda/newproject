@@ -1,46 +1,78 @@
 pipeline {
     agent any
 
+    environment {
+        IMAGE_NAME = "task-tracker"
+        IMAGE_TAG = "latest"
+    }
+
     stages {
 
-        stage('Checkout') {
+        stage('SCM Pull') {
             steps {
-                git branch: 'main', url: 'https://github.com/Tapasvigowda/newproject.git'
+                git branch: 'main',
+                    url: 'https://github.com/Tapasvigowda/newproject.git'
             }
         }
 
-        stage('Install & Test') {
+        stage('Install Dependencies and Run Tests') {
             steps {
                 sh '''
-                npm install
-                npm test
+                    npm install
+                    npm test
                 '''
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Build') {
             steps {
                 sh '''
-                docker build -t task:t1 .
+                    docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
                 '''
             }
         }
 
-        stage('Run Container') {
+        stage('Deploy') {
             steps {
                 sh '''
-                docker rm -f task-tracker || true
-                docker run -d -p 3000:3000 --name task:t1 task:t1
+                    docker rm -f task-tracker || true
+                    docker-compose up -d
                 '''
             }
         }
 
-        stage('Check App') {
+        stage('Wait for Application') {
             steps {
                 sh '''
-                sleep 5
-                curl http://localhost:3000/health
+                    echo "Waiting for application..."
+                    sleep 10
                 '''
+            }
+        }
+
+        stage('Curl') {
+            steps {
+                sh '''
+                    echo "========== HOME =========="
+                    curl --retry 10 --retry-delay 2 --retry-connrefused http://localhost:3000/
+
+                    echo ""
+                    echo "========== HEALTH =========="
+                    curl --retry 10 --retry-delay 2 --retry-connrefused http://localhost:3000/health
+
+                    echo ""
+                    echo "========== TASKS =========="
+                    curl --retry 10 --retry-delay 2 --retry-connrefused http://localhost:3000/api/tasks
+                '''
+            }
+        }
+
+        stage('Cleanup') {
+            steps {
+                sh '''
+                    docker image prune -f
+                '''
+                cleanWs()
             }
         }
     }

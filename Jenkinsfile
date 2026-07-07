@@ -2,9 +2,9 @@ pipeline {
     agent any
 
     environment {
-        APP_NAME = "task-tracker"
-        IMAGE_NAME = "task-tracker"
-        CONTAINER_NAME = "task-tracker"
+        APP_NAME = "task"
+        IMAGE_NAME = "task"
+        CONTAINER_NAME = "tracker"
         PORT = "3000"
     }
 

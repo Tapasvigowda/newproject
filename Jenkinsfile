@@ -21,7 +21,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 sh '''
-                docker build -t task-tracker .
+                docker build -t task:t1 .
                 '''
             }
         }
@@ -30,7 +30,7 @@ pipeline {
             steps {
                 sh '''
                 docker rm -f task-tracker || true
-                docker run -d -p 3000:3000 --name task-tracker task-tracker
+                docker run -d -p 3000:3000 --name task:t1 task:t1
                 '''
             }
         }

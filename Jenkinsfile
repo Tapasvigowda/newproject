@@ -36,7 +36,7 @@ pipeline {
             steps {
                 sh '''
                     docker rm -f task-tracker || true
-                    docker-compose up -d
+                    docker compose up -d
                 '''
             }
         }
